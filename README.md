@@ -1,3 +1,5 @@
-# animongo-gui
+# Animongo-gui
 
-## test
+**Early Development**
+
+_just for learning purpose_
