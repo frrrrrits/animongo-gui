@@ -128,6 +128,12 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-.ui
+# dont listed
+*.ui
 what.ui
 ui_what.py
+test_only.py
+resources.qrc
+images.jpg
+.vscode/launch.json
+home.ui

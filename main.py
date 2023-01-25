@@ -1,7 +1,7 @@
 import sys
 import requests
 import threading
-from platform import python_version
+import json
 from multiprocessing.pool import ThreadPool
 
 from PyQt5.QtGui import *
@@ -12,6 +12,7 @@ from data.ui.ui_home import Ui_MainWindow
 from data.ui.ui_functions import *
 from api.lendrive import *
 from data.extensions.view_ext import *
+from widget.custom_toast import Toast
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -22,6 +23,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         threading.Thread(target=self.getOngoingThread).start()
         self.anime_list.verticalScrollBar().setSingleStep(30)
         self.anime_list.installEventFilter(self)
+        self.anime_list.itemDoubleClicked.connect(self.item_click)
+        self.showToast(msg='Getting Content ..', dur=7)
 
     def resizeEvent(self, event):
         UIFunctions.resize_grips(self)
@@ -29,6 +32,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def mousePressEvent(self, event):
         self.dragPos = event.globalPos()
 
+    def showToast(self, msg: str, dur: float=1):
+        toast = Toast(text=msg, duration=dur, parent=self)
+        toast.show()
+    
+    # testing click fun
+    def item_click(self, index):
+        url = index.statusTip()
+        data  = json.loads(index.whatsThis().replace("'", "\""))        
+        self.showToast(str(data['title']))
+        
     def getOngoingThread(self, page=1):
         if page == 1:
             self.anime_list.clear()

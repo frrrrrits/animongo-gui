@@ -33,15 +33,6 @@ def make_rounded(pic, eps=None):
     im = add_corners(im, 18)
     return pil2pixmap(im)
 
-def make_rounded_res(pic, is_bytes=False):
-    if not is_bytes:
-        im = Image.open(pic)
-    else:
-        im = Image.open(BytesIO(pic))
-    im = add_corners(im, int(im.size[0]/3))
-    return pil2pixmap(im)
-
-
 def write_eps_cover(img, eps):
     draw = ImageDraw.Draw(img)
     w, h = img.size
@@ -57,6 +48,3 @@ def pil2pixmap(image):
     qimg = QImage()
     qimg.loadFromData(bytes_img.getvalue())
     return QPixmap.fromImage(qimg)
-
-
-
