@@ -1,3 +1,4 @@
+from data.extensions.view_ext import get_res_path
 from data.ui.theme.style import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -6,43 +7,70 @@ from widget.custom_grips import *
 
 _is_maximized = False
 
+
 class UIFunctions:
 
+    def selectMenu(getStyle):
+        select = getStyle.replace(
+            Style.rail_menu_button_style_off,
+            Style.rail_menu_button_style_on)
+        return select
+
+    def deselectMenu(getStyle):
+        deselect = getStyle.replace(
+            Style.rail_menu_button_style_on, 
+            Style.rail_menu_button_style_off)
+        return deselect
+
+    def selectDefaultMenu(self, widget):
+        for w in self.frame_left_menu.findChildren(QFrame):
+            if w.objectName() == widget:
+                w.setStyleSheet(UIFunctions.selectMenu(w.styleSheet()))
+
+    def resetStyle(self, widget):
+        for w in self.frame_left_menu.findChildren(QFrame):
+            if w.objectName() != widget:
+                w.setStyleSheet(UIFunctions.deselectMenu(w.styleSheet()))
+
     def maximize_restore(self):
-       global _is_maximized
-       
-       def change_ui():
-        if not _is_maximized:
-            self.resize(self.width()+1, self.height()+1)
-            self.drop_shadow_layout.setContentsMargins(10, 10, 10, 10)
-            self.drop_shadow_frame.setStyleSheet(backgroundFrame)
-            self.btn_maximize.setToolTip("Maximize")
-            self.left_grip.show()
-            self.right_grip.show()
-            self.top_grip.show()
-            self.bottom_grip.show()
-            self.top_left_grip.show()
-            self.top_right_grip.show()
-            self.bottom_left_grip.show()
-            self.bottom_right_grip.show()
-        else:
-            self.drop_shadow_layout.setContentsMargins(0, 0, 0, 0)
-            self.drop_shadow_frame.setStyleSheet(backgroundFrameOff)
-            self.btn_maximize.setToolTip("Restore")
-            self.left_grip.hide()
-            self.right_grip.hide()
-            self.top_grip.hide()
-            self.bottom_grip.hide()
-            self.top_left_grip.hide()
-            self.top_right_grip.hide()
-            self.bottom_left_grip.hide()
-            self.bottom_right_grip.hide()
-            
-       if self.isMaximized():
+        global _is_maximized
+
+        def change_ui():
+            if not _is_maximized:
+                self.resize(self.width()+1, self.height()+1)
+                self.drop_shadow_layout.setContentsMargins(10, 10, 10, 10)
+                self.drop_shadow_frame.setStyleSheet(Style.surface_bg_on)
+                self.btn_maximize.setToolTip("Maximize")
+                self.btn_maximize.setIcon(
+                    QIcon(get_res_path("icon_maximize.png")))
+                self.left_grip.show()
+                self.right_grip.show()
+                self.top_grip.show()
+                self.bottom_grip.show()
+                self.top_left_grip.show()
+                self.top_right_grip.show()
+                self.bottom_left_grip.show()
+                self.bottom_right_grip.show()
+            else:
+                self.drop_shadow_layout.setContentsMargins(0, 0, 0, 0)
+                self.drop_shadow_frame.setStyleSheet(Style.surface_bg_off)
+                self.btn_maximize.setToolTip("Restore")
+                self.btn_maximize.setIcon(
+                    QIcon(get_res_path("icon_restore.png")))
+                self.left_grip.hide()
+                self.right_grip.hide()
+                self.top_grip.hide()
+                self.bottom_grip.hide()
+                self.top_left_grip.hide()
+                self.top_right_grip.hide()
+                self.bottom_left_grip.hide()
+                self.bottom_right_grip.hide()
+
+        if self.isMaximized():
             _is_maximized = False
             self.showNormal()
             change_ui()
-       else:
+        else:
             _is_maximized = True
             self.showMaximized()
             change_ui()
@@ -63,12 +91,12 @@ class UIFunctions:
                 self.dragPos = event.globalPos()
                 event.accept()
 
-        self.title_bar.mouseMoveEvent = moveWindow
+        self.top_bar.mouseMoveEvent = moveWindow
 
         def maximize_restore(event):
             if event.type() == QEvent.MouseButtonDblClick:
                 UIFunctions.maximize_restore(self)
-        self.title_bar.mouseDoubleClickEvent = maximize_restore
+        self.top_bar.mouseDoubleClickEvent = maximize_restore
 
         self.shadow = QGraphicsDropShadowEffect(self)
         self.shadow.setBlurRadius(17)
@@ -77,7 +105,8 @@ class UIFunctions:
         self.shadow.setColor(QColor(0, 0, 0, 150))
         self.drop_shadow_frame.setGraphicsEffect(self.shadow)
 
-        self.btn_maximize.clicked.connect(lambda: UIFunctions.maximize_restore(self))
+        self.btn_maximize.clicked.connect(
+            lambda: UIFunctions.maximize_restore(self))
         self.btn_minimize.clicked.connect(lambda: self.showMinimized())
         self.btn_close.clicked.connect(lambda: self.close())
 
