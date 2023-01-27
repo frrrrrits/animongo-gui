@@ -1,5 +1,4 @@
 import sys
-from tkinter.ttk import Widget
 import requests
 import threading
 import json
@@ -14,7 +13,7 @@ from data.ui.ui_home import Ui_MainWindow
 from data.ui.ui_functions import *
 from api.lendrive import *
 from data.extensions.view_ext import *
-from widget.costum_progressbar import LoadingProgressBar
+from widget.custom_progressbar import LoadingProgressBar
 from widget.custom_toast import Toast
 
 class MainWindow(QMainWindow, Ui_MainWindow):
