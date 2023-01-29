@@ -1,3 +1,4 @@
+from multiprocessing import pool
 import sys
 import requests
 import threading
@@ -13,6 +14,7 @@ from data.ui.ui_home import Ui_MainWindow
 from data.ui.ui_functions import *
 from api.lendrive import *
 from data.extensions.view_ext import *
+from data.worker.worker_utils import Worker
 from widget.custom_progressbar import LoadingProgressBar
 from widget.custom_toast import Toast
 
@@ -34,7 +36,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.anime_list.itemDoubleClicked.connect(self.item_click)
         self.btn_search.clicked.connect(self.getSearch)
         
-        self.getOngoing()
+        self.threadpool =  QThreadPool()
+        self.create_ongoing_worker()
+
         self.showToast(msg='Getting Content ..', dur=7)
 
     def resizeEvent(self, event):
@@ -67,26 +71,19 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         data  = json.loads(index.whatsThis().replace("'", "\""))        
         webbrowser.open_new_tab(url)
         self.showToast("Opening Browser", dur=5)
-    
-    def getOngoing(self):
-        try: t = threading.Thread(target=self.getOngoingThread)
-        except: self.showToast("Thread creation failure")
-        try: t.start()
-        except: self.showToast("Could not start thread, Please Reopen apps")
-    
+
+    # Api Request & Worker
     def getOngoingThread(self, page=1):
         self.progressBar.showProgress()
-        if page == 1:
-            self.anime_list.clear()
+        if page == 1: self.anime_list.clear()
         data = get_ongoing(page)
-        result = ThreadPool(16).map(self.itemView, data)
-        self.progressBar.hideProgress()
-        for res, _ in result:
+        list = map(self.item_view, data)
+        for res, _ in list:
             self.anime_list.addItem(res)
         if page:
-            if not page:
-                page = 0
+            if not page: page = 0
             self.anime_list.setWhatsThis(str(page))
+        return data
     
     def getSearch(self):
         self.progressBar.showProgress()
@@ -99,8 +96,18 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         get_search(query)
         self.progressBar.hideProgress()
         self.showToast("Done")
+ 
+    def create_ongoing_worker(self):
+        page = 1
+        ongoing_worker = Worker(self.getOngoingThread, args=(page,))
+        ongoing_worker.signals.result.connect(self.ongoing_worker_complete)
+        self.threadpool.start(ongoing_worker)
+   
+    def ongoing_worker_complete(self, result):
+        self.progressBar.hideProgress()
+        return "done"
 
-    def itemView(self, data):
+    def item_view(self, data):
         font = QFont()
         font.setPointSize(11)
         rawImg = requests.get(data['img']).content
@@ -116,9 +123,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         return anime, rawImg
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    main_thread = QApplication(sys.argv)
     make_font_dir = QDir("Roboto")
     QFontDatabase.addApplicationFont("res/fonts.ttf")
-    win = MainWindow()
-    win.show()
-    sys.exit(app.exec())
+    main_window = MainWindow()
+    main_window.show()
+    sys.exit(main_thread.exec())
