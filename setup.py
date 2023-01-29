@@ -18,9 +18,12 @@ setup(
     version = "1.0",
     description = "Animongo GUI version made with Python",
     author = "lxs7499",
-    options = {'build_exe' : {'include_files' : files}},
+    options = {'build_exe' : {
+        'include_files' : files,
+        'excludes': ["tkinter", "unittest", "pydoc", "PyQt6", "PySide6"],
+    }},
     executables = [target]
 )
 
-
-# still error
+# masih error, ada masalah di icon2 nya ntah
+# png working fine but not with the svg
