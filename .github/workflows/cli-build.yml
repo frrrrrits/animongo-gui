@@ -13,31 +13,44 @@ permissions:
   contents: read
 
 jobs:
+
   build:
 
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest]
+      
+    runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        pip install --upgrade cx_Freeze
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test Run
-      run: |
-        import os
-        import sys
-        from cx_Freeze import setup, Executable
-        target = Executable(script="main.py", base="Win32GUI")
+    
+      # Check-out repository
+      - uses: actions/checkout@v3
+      
+      # Setup Python
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+          cache: 'pip'
+      - run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      # Build python script into a stand-alone exe
+      - uses: Nuitka/Nuitka-Action@main
+        with:
+          script-name: main.py
+          onefile: true
+          enable-plugins: pyqt5
+          disable-console: true
+          windows-icon-from-ico: icon.ico
+          
+      # Uploads artifact
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ runner.os }} Build
+          path: |
+            build/*.exe
+            build/*.bin
+            build/*.app/**/*
